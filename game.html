@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(135deg, #e6ccff, #f3e6ff, #d1b3ff);
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .splash, .welcome, .game {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .splash {
+      display: flex;
+      font-size: 32px;
+      color: #8000ff;
+      background-color: #f3e6ff;
+      animation: fadeOut 4s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; visibility: hidden; }
+    }
+
+    .container {
+      background: #f8f0ff;
+      border: 3px solid #d1b3ff;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    input, select, button {
+      margin: 8px;
+      padding: 10px;
+      border: 2px solid #c79aff;
+      border-radius: 10px;
+    }
+
+    button {
+      background-color: #b266ff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .info-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: #a64dff;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 14px;
+      line-height: 28px;
+    }
+
+    .info-text {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      background: #fdf3ff;
+      border: 1px solid #c79aff;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      width: 200px;
+      font-size: 14px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-gap: 10px;
+      margin-top: 20px;
+    }
+
+    .cell {
+      width: 80px;
+      height: 80px;
+      font-size: 36px;
+      background-color: #f0e6ff;
+      border: 2px solid #c79aff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .popup {
+      background: #f3e6ff;
+      border: 2px dashed #b266ff;
+      padding: 20px;
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: #8000ff;
+      border-radius: 20px;
+      box-shadow: 0 0 15px #b266ff;
+      display: none;
+    }
+
+    .watermark {
+      position: fixed;
+      bottom: 5px;
+      right: 10px;
+      font-size: 14px;
+      color: black;
+      font-family: "Times New Roman", serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="splash">
+    <div>Selamat Datang di Game<br> Tic Tac Toe <br>"Cinta itu seperti game—kadang menang, kadang belajar."</div>
+  </div>
+  
+<button onclick="document.getElementById('bgm').play()">Putar Musik</button>
+
+<audio id="bgm" loop>
+  <source src="jkt48.mp3" type="audio/mpeg">
+  Maaf, browser Anda tidak mendukung pemutaran musik.
+</audio>
+
+
+  <div class="welcome">
+    <div class="container">
+      <h2>Masukkan Nama & Pilih Karakter</h2>
+      <input type="text" id="playerName" placeholder="Nama Kamu">
+      <br>
+      <label>Pilih Karakter:</label>
+      <select id="playerChar">
+        <option value="X">X</option>
+        <option value="O">O</option>
+        <option value="🤍">♡</option>
+        <option value="⭐">★</option>
+      </select>
+      <br>
+      <label>Tingkat Kesulitan:</label>
+      <select id="difficulty">
+        <option value="easy">Easy🥰</option>
+        <option value="medium">Medium😎</option>
+        <option value="hard">Hard☠️</option>
+      </select>
+      <br>
+      <button onclick="startGame()">Mulai Game</button>
+    </div>
+  </div>
+
+  <div class="game">
+    <div class="info-btn" onclick="toggleInfo()">info</div>
+    <div class="info-text" id="infoText">
+      - Klik sel untuk bermain<br>
+      - Reset menghapus skor<br>
+      - Pop-up muncul saat menang<br>
+      - Skor disimpan otomatis<br>
+         SELAMAT MAIN SAYANG
+    </div>
+    <div class="container">
+      <h2 id="turnInfo"></h2>
+      <div class="board" id="board"></div>
+      <p id="scoreText"></p>
+      <button onclick="resetGame()">Reset Skor</button>
+    </div>
+  </div>
+
+  <div class="popup" id="popup"></div>
+  <div class="watermark">Created by Twins💫</div>
+
+  <script>
+    const splash = document.querySelector(".splash");
+    const welcome = document.querySelector(".welcome");
+    const game = document.querySelector(".game");
+    const boardEl = document.getElementById("board");
+    const popup = document.getElementById("popup");
+    const turnInfo = document.getElementById("turnInfo");
+    const scoreText = document.getElementById("scoreText");
+
+    let board = [];
+    let currentPlayer = '';
+    let playerChar = '';
+    let aiChar = '';
+    let playerName = '';
+    let aiName = "Twins";
+    let scores = [0, 0];
+    let difficulty = 'Hard';
+
+    setTimeout(() => {
+      splash.style.display = "none";
+      welcome.style.display = "flex";
+    }, 4000);
+
+    function toggleInfo() {
+      const info = document.getElementById("infoText");
+      info.style.display = info.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function loadScores() {
+      const saved = localStorage.getItem("tictactoe_scores");
+      if (saved) scores = JSON.parse(saved);
+    }
+
+    function saveScores() {
+      localStorage.setItem("tictactoe_scores", JSON.stringify(scores));
+    }
+
+    function startGame() {
+      playerName = document.getElementById("playerName").value || "Player";
+      playerChar = document.getElementById("playerChar").value;
+      aiChar = ['X','O','♡','★'].find(c => c !== playerChar);
+      difficulty = document.getElementById("difficulty").value;
+      welcome.style.display = "none";
+      game.style.display = "flex";
+      loadScores();
+      initBoard();
+    }
+
+    function initBoard() {
+      board = Array(9).fill('');
+      currentPlayer = playerChar;
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = i;
+        cell.onclick = () => handleMove(i);
+        boardEl.appendChild(cell);
+      }
+      updateTurn();
+    }
+
+    function handleMove(index) {
+      if (board[index] !== '' || currentPlayer !== playerChar) return;
+      board[index] = playerChar;
+      renderBoard();
+
+      if (checkWinner(playerChar)) {
+        scores[0]++;
+        saveScores();
+        showPopup(`${playerName} menang! Cinta kalian bersinar!`);
+        return;
+      }
+
+      if (board.every(cell => cell !== '')) {
+        showPopup("Seri! Tapi cinta tak pernah gagal.");
+        return;
+      }
+
+      currentPlayer = aiChar;
+      setTimeout(aiMove, 500);
+    }
+
+    function aiMove() {
+      let move;
+      const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+
+      if (difficulty === 'easy') {
+        move = empty[Math.floor(Math.random() * empty.length)];
+      } else if (difficulty === 'medium') {
+        move = empty.find(i => {
+          const temp = [...board];
+          temp[i] = aiChar;
+          return checkWinnerBoard(temp, aiChar);
+        }) ?? empty[Math.floor(Math.random() * empty.length)];
+      } else {
+        move = empty.find(i => {
+          const temp = [...board];
+          temp[i] = playerChar;
+          return checkWinnerBoard(temp, playerChar);
+        }) ?? empty[Math.floor(Math.random() * empty.length)];
+      }
+
+      board[move] = aiChar;
+      renderBoard();
+
+      if (checkWinner(aiChar)) {
+        scores[1]++;
+        saveScores();
+        showPopup(`${aiName} menang! Tapi cinta tetap menyala, ${playerName}.`);
+        return;
+      }
+
+      currentPlayer = playerChar;
+      updateTurn();
+    }
+
+    function renderBoard() {
+      const cells = document.querySelectorAll(".cell");
+      cells.forEach((cell, i) => cell.textContent = board[i]);
+    }
+
+    function checkWinner(player) {
+      return checkWinnerBoard(board, player);
+    }
+
+    function checkWinnerBoard(b, p) {
+      const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return winPatterns.some(pattern => pattern.every(i => b[i] === p));
+    }
+
+    function updateTurn() {
+      turnInfo.textContent = `Giliran: ${currentPlayer === playerChar ? playerName : aiName}`;
+      scoreText.textContent = `Skor - ${playerName}: ${scores[0]} | ${aiName}: ${scores[1]}`;
+    }
+
+    function resetGame() {
+      scores = [0, 0];
+      saveScores();
+      initBoard();
+      updateTurn();
+    }
+
+    function showPopup(msg) {
+      popup.textContent = msg;
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+        initBoard();
+        updateTurn();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
